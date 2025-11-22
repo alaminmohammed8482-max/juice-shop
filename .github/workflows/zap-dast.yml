@@ -1,0 +1,47 @@
+name: ZAP DAST Scan
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Start Juice Shop container
+        run: |
+          docker build -t juice-secure .
+          docker run -d -p 3000:3000 --name juice juice-secure
+          sleep 15
+
+      - name: Create report folder
+        run: mkdir -p zap-reports
+
+      - name: Run ZAP Baseline Scan
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/zap-reports:/zap/wrk:rw \
+            --network host \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+              -t http://localhost:3000 \
+              -r /zap/wrk/zap-baseline-report.html \
+              -J /zap/wrk/zap-report.json
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-html-report
+          path: zap-reports/zap-baseline-report.html
+
+      - name: Upload JSON report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-json-report
+          path: zap-reports/zap-report.json
