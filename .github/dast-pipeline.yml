@@ -1,6 +1,6 @@
 name: Juice Shop DAST Scan
 
-# Run workflow on push or pull request to master
+# Trigger on push or pull request to master
 on:
   push:
     branches:
@@ -40,4 +40,3 @@ jobs:
         with:
           target: 'http://localhost:3000'
           failOnRisk: 'high'
-
