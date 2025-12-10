@@ -1,29 +1,44 @@
-name: "Let me lint:fix that for you"
+name: Juice Shop CI + DAST
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  LMLFTFY:
+  build-and-dast:
     runs-on: ubuntu-latest
+
     steps:
-    - name: "Check out Git repository"
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
-    - name: "Use Node.js 22"
-      uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af #v4.1.0
-      with:
-        node-version: 22
-    - name: "Install application"
-      run: |
-        npm install --ignore-scripts
-        cd frontend
-        npm install --ignore-scripts --legacy-peer-deps
-    - name: "Fix everything which can be fixed"
-      run: 'npm run lint:fix'
-    - uses: stefanzweifel/git-auto-commit-action@8621497c8c39c72f3e2a999a26b4ca1b5058a842 #v5.0.1
-      with:
-        commit_message: "Auto-fix linting issues"
-        branch: ${{ github.head_ref }}
-        commit_options: '--signoff'
-        commit_user_name: JuiceShopBot
-        commit_user_email: 61591748+JuiceShopBot@users.noreply.github.com
-        commit_author: JuiceShopBot <61591748+JuiceShopBot@users.noreply.github.com>
+      # Step 1: Get the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Skip lint for now (optional)
+      #- name: Lint code
+      #  run: npm run lint:fix
+
+      # Step 5: Start Juice Shop server
+      - name: Start Juice Shop
+        run: |
+          npm start &
+          sleep 15   # wait for server to fully start
+
+      # Step 6: Run OWASP ZAP DAST scan
+      - name: Run OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: 'http://localhost:3000'
+          failOnRisk: 'high'
+
