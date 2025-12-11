@@ -12,22 +12,26 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Build Juice Shop image
+        run: docker build -t juice-shop-secure .
 
       - name: Start Juice Shop container
         run: |
-          docker build -t juice-shop-secure .
           docker run -d -p 3000:3000 --name juice-shop juice-shop-secure
-          sleep 20
+          echo "Waiting for Juice Shop to start..."
+          sleep 40
 
-      - name: Run OWASP ZAP baseline scan
+      - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target: "http://localhost:3000"
+          target: "http://127.0.0.1:3000"
+          cmd_options: "-a"
           generate-html-report: true
 
-      - name: Upload ZAP report artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
         with:
           name: zap-report
-          path: ./report_html.html
+          path: zap_report.html
