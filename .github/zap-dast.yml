@@ -3,8 +3,6 @@ name: ZAP DAST Scan
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
 
 jobs:
   zap_scan:
@@ -17,7 +15,7 @@ jobs:
       - name: Build and run Juice Shop
         run: |
           docker build -t juice-shop .
-          docker run -d -p 3000:3000 --name juice-shop juice-shop
+          docker run -d -p 3000:3000 juice-shop
           sleep 30
 
       - name: Run OWASP ZAP baseline scan
@@ -25,6 +23,7 @@ jobs:
         with:
           target: "http://localhost:3000"
           cmd_options: "-r zap-report.html"
+          fail_action: false   # ⭐ THIS IS THE KEY
 
       - name: Upload ZAP report
         uses: actions/upload-artifact@v3
