@@ -1,12 +1,33 @@
-- name: Prepare ZAP workspace
-  run: mkdir -p $GITHUB_WORKSPACE/zap/wrk
+name: ZAP DAST Scan
 
-- name: Run ZAP Baseline Scan
-  run: |
-    docker run --rm \
-      -v $GITHUB_WORKSPACE/zap/wrk:/zap/wrk:Z \
-      ghcr.io/zaproxy/zaproxy:stable \
-      zap-baseline.py \
-      -t http://localhost:3000 \
-      -g /zap/wrk/zap.yaml \
-      -r /zap/wrk/zap-baseline-report.html
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build and run Juice Shop
+        run: |
+          docker build -t juice-shop .
+          docker run -d -p 3000:3000 --name juice-shop juice-shop
+          sleep 30
+
+      - name: Run OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: "http://localhost:3000"
+          cmd_options: "-r zap-report.html"
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-dast-report
+          path: zap-report.html
