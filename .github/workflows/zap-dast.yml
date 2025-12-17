@@ -1,5 +1,4 @@
 name: ZAP DAST Scan
-
 on:
   push:
     branches: [master]
