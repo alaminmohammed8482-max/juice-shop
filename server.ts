@@ -142,16 +142,19 @@ import {
 } from "./routes/fileUpload";
 
 const app = express(); // Simple CSP middleware example
+// Simple CSP + security headers middleware
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;"
   );
-  // example headers to reduce other warnings:
+
+  // Extra security headers (helps ZAP warnings)
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "no-referrer");
-  res.setHeader("Permissions-Policy", "geolocation=()"); // replacement for Feature-Policy
+  res.setHeader("Permissions-Policy", "geolocation=()");
+
   next();
 });
 
