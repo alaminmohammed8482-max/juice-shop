@@ -2,8 +2,11 @@ name: ZAP DAST Scan
 
 on:
   push:
-    branches: [ "master" ]
-
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 jobs:
   zap_scan:
     runs-on: ubuntu-latest
